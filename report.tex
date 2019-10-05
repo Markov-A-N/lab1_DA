@@ -1,0 +1,185 @@
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{multicol,multirow}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usepackage{ulem}
+\usepackage[russian]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1, T2A]{fontenc}
+\usepackage{fullpage}
+\usepackage{multicol,multirow}
+\usepackage{tabularx}
+\usepackage{ulem}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{indentfirst}
+
+% Оригиналный шаблон: http://k806.ru/dalabs/da-report-template-2012.tex
+
+\begin{document}
+
+\section*{Лабораторная работа №\,1 по курсу дискрeтного анализа: сортировка за линейное время}
+
+Выполнил студент группы М80-208Б-18 МАИ \textit{Марков Александр}.
+
+\subsection*{Условие}
+\begin{enumerate}
+\item Требуется разработать программу, осуществляющую ввод пар «ключ-значение», их упорядочивание по возрастанию ключа алгоритмом сортировки подсчётом и вывод отсортированной последовательности. 
+\item Вариант 1-1.
+
+Сортировка подсчётом.
+
+Тип ключа: числа от 0 до 65535.
+
+Тип значения: строки фиксированной длины 64 символа, во входных данных могут встретиться строки меньшей длины, при этом строка дополняется до 64-х нулевыми символами, которые не выводятся на экран.
+\end{enumerate}
+
+\subsection*{Метод решения}
+
+\begin{enumerate}
+    \item Данные на вход программе подаются через стандартный поток ввода и, как следствие, весьма удобно считывать циклом \textbf{while} (пока значение может быть прочитано, продолжать цикл). 
+    \begin{lstlisting}[language=C++]
+    while(std::cin >> temp)
+    \end{lstlisting}
+    \item Предусмотрена работа с неизвестным количеством данных.
+    \item По алгоритму сортировки необходимо знать максимальный ключ, он находится в цикле считывания данных.
+    \item Собственно сам алгоритм сортировки принимает на вход вектор \textbf{inputVector}, пары "ключ-значение"\ которого необходимо отсортировать по порядку возрастания ключей, и максимальный ключ. Также в коде сортировки присутствуют 2 дополнительных массива: массив \textbf{b[0...inputVector.Size()]} для хранения отсортированных выходных данных, массив для временной работы \textbf{c[0...max]}, где \textbf{max} - максимальный ключ.
+\end{enumerate}
+
+\subsection*{Описание программы}
+
+На каждой непустой строке входного файла располагается пара «ключ-значение»,
+поэтому создадим новую структуру \textbf{TKeyValue}, в которой будем хранить ключ и значение.
+
+А также мы не знаем количество входных данных, поэтому мы напишем динамический массив - вектор, в который будут помещаться структуры \textbf{TKeyValue}.
+\begin{table}[!htb]
+\begin{tabular}{|m{8cm}|m{8cm}|}
+\hline
+\multicolumn{2}{|c|}{main.cpp} \\ 
+\hline
+\cellcolor{gray!25} Тип данных       & \cellcolor{gray!25} Значение\\ 
+\hline
+struct TKeyValue & Структура для хранения пары "ключ-значение" \\ 
+\hline
+template <typename T> class TVector & Вектор для хранения структур \textbf{TKeyValue}\\
+\hline
+\cellcolor{gray!25} Функция & \cellcolor{gray!25}Значение\\
+\hline
+TKeyValue() & Конструктор структуры \textbf{TKeyValue}\\
+\hline
+TKeyValue(int i, char *str) & Конструктор структуры \textbf{TKeyValue}\\
+\hline
+void Fill(char ch = '$\backslash$0') & Заполнение массива \textbf{value[]}\\
+\hline
+TKeyValue \&operator=(TKeyValue \&other) & Перегрузка оператора присваивания для структуры \textbf{TKeyValue}\\
+\hline
+friend std::istream \&operator>> (std::istream \&in, TKeyValue \&obj) & Перегрузка оператора ввода для структуры \textbf{TKeyValue}\\
+\hline
+friend std::ostream \&operator<<(std::ostream \&out, TKeyValue \&obj) &Перегрузка оператора вывода для структуры \textbf{TKeyValue}\\
+\hline
+TVector() & Конструктор класса \textbf{TVector} \\
+\hline
+TVector(unsigned int size) & Конструктор класса \textbf{TVector} \\
+\hline
+unsigned int Size() const & Размер вектора \\
+\hline
+bool Empty() const & Проверка на пустоту вектора \\
+\hline
+TIterator Begin() const & Доступ к началу вектора \\
+\hline
+TIterator End() const & Доступ к концу вектора \\
+\hline
+template<typename U> friend void Swap(TVector<U> \&first, TVector<U> \&second) & Обмен местами двух векторов\\
+\hline
+TVector \&operator=(TVector other) & Перегрузка оператора присваивания для класса \textbf{TVector}\\
+\hline
+$\sim$ TVector() & Деструктор класса \textbf{TVector} \\
+\hline
+TValue\_type \&operator[](int index) const & Перегрузка оператора [] для класса \textbf{TVector}\\
+\hline
+void PushBack(TValue\_type \&value) & Добавить элемент в конец вектора\\
+\hline
+template <typename U> friend TVector<U> CountingSort(const TVector<U> \&inputVector, unsigned int max) & Функция сортировки подсчётом\\
+\hline
+int main() & Главная функция, в которой происходит чтение данных, вызов функции сортировки и вывод. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{Дневник отладки}
+
+При создании этой таблицы была использована история посылок.
+\begin{table}[!htb]
+\begin{tabular}{|m{2cm}|m{3cm}|m{11cm}|}
+\hline
+Время & Проблема & Описание \\
+\hline
+2019/09/23 09:49:08 & Превышено реальное время работы & В ходе проверки работы на чекере выяснилось, что весьма важной характеристикой работы программы является время вывода данных в консоль. Методы оптимизации вывода: 1) Опция std::ios\_base::sync\_with\_stdio(false), которая отключает синхронизацию потоков Си и С++. Т.~е. не происходит копирование данных из буфера в буфер, что даёт некоторый выигрыш в скорости вывода данных на стандартный вывод; 2) Опция std::cin.tie(nullptr). Это отделяет cin от cout. Связанные потоки обеспечивают, чтобы один поток сбрасывался автоматически перед каждой операцией ввода-вывода в другом потоке. \\
+\hline
+2019/09/23 10:07:52 & Работает & Далее происходила незначительная оптимизация кода и кодстайла. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{Тест производительности}
+
+Тесты создавались с помощью небольшой программы на языке C++:
+\begin{lstlisting}[language=C++]
+#include <iostream>
+#include <fstream>
+#include <ctime>
+#include <cstdlib>
+
+int main(int argc, char *argv[]) {
+	std::ofstream file(argv[1]);
+	srand(time(0));
+	size_t size = atoi(argv[2]);
+	char value[65];
+	for (register int i = 0; i < size; i++) {
+		file << rand() % 65535 << " ";
+		for (register int j = 0; j < 64; j++) {
+			value[j] = (char) (rand() % 26 + 97);
+		}
+		value[64] = '\0';
+		file << value << "\n";
+	}
+	return 0;
+}
+\end{lstlisting}
+
+\begin{tikzpicture}
+	\begin{axis}[ylabel=Время,xlabel=Количество строк, width=15.5cm, height=10cm,grid=both]
+	\addplot coordinates {
+		( 100000, 1.170 )
+		( 90000, 1.089 )
+		( 80000, 0.944 )
+		( 70000, 0.858 )
+		( 60000, 0.727 )
+		( 50000, 0.600 )
+		( 40000, 0.469 )
+		( 30000, 0.355  )
+		( 20000, 0.262  )
+		( 10000, 0.126  )};
+	\addplot coordinates {
+	( 10000, 0.126)
+	( 100000, 1.170 )};
+	\end{axis}
+
+\end{tikzpicture}
+
+\subsection*{Недочёты}
+
+При неиспользовании опций std::ios\_base::sync\_with\_stdio(false) и std::cin.tie(nullptr) программа не проходила 12 тест по времени. После добавления этих опций время работы программы уменьшилось почти в 3 раза.
+
+\subsection*{Выводы}
+
+Данный алгоритм сортировки можно применять для обработки списка людей по году рождения, где ключ -- год рождение, а значение -- фамилия, имя, отчество.
+
+В целом написание программы было полезным, посколько я получил опыт создания сортировки подсчетом и использования утилит time и valgrind, улучшил навыки отладки программы. 
+
+\end{document}
